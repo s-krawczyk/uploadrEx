@@ -56,14 +56,14 @@ namespace UploadrEx
       Dictionary<string, CollectionFlickr> directorySchema = collectionFlickrs.ToDictionary(k => k.Title, v => v);
 
       string serializeObject = JsonConvert.SerializeObject(directorySchema);
-      File.WriteAllText("C:\\schemaFromDisk.txt", serializeObject);
+      File.WriteAllText(ApplicationHelper.GetAppDataFolder() + "\\schemaFromDisk.txt", serializeObject);
 
       Dictionary<string, CollectionFlickr> flickSchemaDir = flickrSchema;
 
       List<CollectionFlickr> notSynchronized = CompareSchemas(flickSchemaDir, directorySchema);
 
       string notSynchronizedSerialized = JsonConvert.SerializeObject(notSynchronized);
-      File.WriteAllText("C:\\notSynchronizedPhotos.txt", notSynchronizedSerialized);
+      File.WriteAllText(ApplicationHelper.GetAppDataFolder() + "\\notSynchronizedPhotos.txt", notSynchronizedSerialized);
 
       Upload(authInstance, ref notSynchronized, ref flickSchemaDir);
 

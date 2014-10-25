@@ -19,7 +19,12 @@ namespace UploadrEx
     private readonly Flickr _flickr;
     private bool _reloadFromFlickr;
 
-    public Func<string> FlickrSchemaCacheFilePath { get; set; }
+    static FlickrSchemaService()
+    {
+      FlickrSchemaCacheFilePath = () => ApplicationHelper.GetAppDataFolder() + "\\" + DefaultFlickrSchemaCacheFilePath;
+    }
+
+    public static Func<string> FlickrSchemaCacheFilePath { get; set; }
 
     public FlickrSchemaService(Flickr flickr, bool reloadFromFlickr)
     {

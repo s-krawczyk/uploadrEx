@@ -57,6 +57,7 @@
     <Compile Include="FlickrManager.cs" />
     <Compile Include="Entities\PhotoFlickr.cs" />
     <Compile Include="FlickrSchemaService.cs" />
+    <Compile Include="Infrastructure\ApplicationHelper.cs" />
     <Compile Include="Infrastructure\ILogger.cs" />
     <Compile Include="ISchemaService.cs" />
     <Compile Include="Infrastructure\log4netLogger.cs" />
