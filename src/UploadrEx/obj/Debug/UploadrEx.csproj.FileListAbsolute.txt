@@ -7,3 +7,6 @@ F:\Projekty\UploadrEx\src\UploadrEx\bin\Debug\Newtonsoft.Json.dll
 F:\Projekty\UploadrEx\src\UploadrEx\bin\Debug\Newtonsoft.Json.xml
 F:\Projekty\UploadrEx\src\UploadrEx\obj\Debug\UploadrEx.exe
 F:\Projekty\UploadrEx\src\UploadrEx\obj\Debug\UploadrEx.pdb
+F:\Projekty\UploadrEx\src\UploadrEx\bin\Debug\log4net.dll
+F:\Projekty\UploadrEx\src\UploadrEx\bin\Debug\log4net.xml
+F:\Projekty\UploadrEx\src\UploadrEx\bin\Debug\log4net.config
