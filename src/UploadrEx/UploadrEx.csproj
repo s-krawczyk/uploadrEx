@@ -35,6 +35,9 @@
     <Reference Include="FlickrNet">
       <HintPath>..\..\libs\FlickrNet\FlickrNet.dll</HintPath>
     </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -54,7 +57,10 @@
     <Compile Include="FlickrManager.cs" />
     <Compile Include="Entities\PhotoFlickr.cs" />
     <Compile Include="FlickrSchemaService.cs" />
+    <Compile Include="Infrastructure\ILogger.cs" />
     <Compile Include="ISchemaService.cs" />
+    <Compile Include="Infrastructure\log4netLogger.cs" />
+    <Compile Include="Infrastructure\LoggerFactory.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -65,6 +71,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="log4net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

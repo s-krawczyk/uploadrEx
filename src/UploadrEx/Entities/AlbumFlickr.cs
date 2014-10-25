@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace UploadrEx
+namespace UploadrEx.Entities
 {
   [DebuggerDisplay("{Title}")]
   internal class AlbumFlickr

@@ -2,18 +2,24 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UploadrEx.Entities;
+using UploadrEx.Infrastructure;
 
 namespace UploadrEx
 {
   internal class Program
   {
+    private static ILogger Log;
+
     private static void Main(string[] args)
     {
+      LoggerFactory.SetLogger(Log4NetLogger.GetLogger);
+      Log = LoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
       if (FlickrManager.OAuthToken == null)
       {
         Flickr f = FlickrManager.GetInstance();
@@ -22,7 +28,7 @@ namespace UploadrEx
 
         string url = f.OAuthCalculateAuthorizationUrl(requestToken.Token, AuthLevel.Write);
 
-        Console.WriteLine("Please enter authorization code:");
+        Log.Debug("Please enter authorization code:");
 
         System.Diagnostics.Process.Start(url);
 
@@ -36,18 +42,18 @@ namespace UploadrEx
         }
         catch (FlickrApiException ex)
         {
-          Console.WriteLine("Error occured.", ex);
+          Log.Error("Error occured.", ex);
         }
       }
 
       Flickr authInstance = FlickrManager.GetAuthInstance();
       Auth oAuthCheckToken = authInstance.AuthOAuthCheckToken();
 
-      var flickrSchemaService = new FlickrSchemaService(authInstance);
+      var flickrSchemaService = new FlickrSchemaService(authInstance, false); //TODO: pass from args
       var flickrSchema = flickrSchemaService.GetSchema().ToDictionary(k => k.Title, v => v);
       var x = new DirectorySchemaService(@"E:\\Biblioteka Windows\\Zdjecia");
       IEnumerable<CollectionFlickr> collectionFlickrs = x.GetSchema();
-      Dictionary<string, CollectionFlickr> directorySchema = collectionFlickrs.ToDictionary(k => k.Title, v => v); //TODO: dodac przelacznik z katalogiem do synchronizacji
+      Dictionary<string, CollectionFlickr> directorySchema = collectionFlickrs.ToDictionary(k => k.Title, v => v);
 
       string serializeObject = JsonConvert.SerializeObject(directorySchema);
       File.WriteAllText("C:\\schemaFromDisk.txt", serializeObject);
@@ -70,7 +76,7 @@ namespace UploadrEx
       {
         if (string.IsNullOrEmpty(collectionToUpload.Id))
         {
-          Debug.WriteLine("Creating new collection: [{0}]", collectionToUpload.Title);
+          Log.DebugFormat("Creating new collection: [{0}]", collectionToUpload.Title);
 
           Collection createdCollection = flickrInstance.CollectionsCreate(collectionToUpload.Title, string.Empty);
 
@@ -89,7 +95,7 @@ namespace UploadrEx
         {
           if (string.IsNullOrEmpty(notSyncedAlbum.Id))
           {
-            Debug.WriteLine("Creating new album: [{0}]", notSyncedAlbum.Title);
+            Log.DebugFormat("Creating new album: [{0}]", notSyncedAlbum.Title);
 
             // najpierw trzeba przeslac zdjecie inaczej nie mozna utworzyc kolekcji
             PhotoFlickr photoFlickr = notSyncedAlbum.PhotoList.First();
@@ -142,7 +148,7 @@ namespace UploadrEx
                 catch (Exception ex)
                 {
                   retryCount++;
-                  Debug.WriteLine(ex);
+                  Log.Warn("Uploading failed. Retrying...", ex);
                 }
               }
 

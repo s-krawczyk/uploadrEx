@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UploadrEx.Entities;
+using UploadrEx.Infrastructure;
 
 namespace UploadrEx
 {
   internal class DirectorySchemaService : ISchemaService
   {
+    private readonly ILogger _log = LoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
     private readonly string _directoryPath;
 
     public DirectorySchemaService(string directoryPath)
@@ -16,8 +20,8 @@ namespace UploadrEx
 
     public IEnumerable<CollectionFlickr> GetSchema()
     {
-      List<string> listDirsLoop = ListDirsLoop(_directoryPath);
-      Dictionary<string, CollectionFlickr> collectionFlickrs = ParseDirectories(listDirsLoop);
+      List<string> directoriesTree = GetDirectoriesTree(_directoryPath);
+      Dictionary<string, CollectionFlickr> collectionFlickrs = ParseDirectories(directoriesTree);
 
       return collectionFlickrs.Values;
     }
@@ -78,14 +82,14 @@ namespace UploadrEx
       return collections;
     }
 
-    private static List<string> ListDirsLoop(string directory)
+    private static List<string> GetDirectoriesTree(string directory)
     {
       List<string> directories = Directory.GetDirectories(directory).ToList();
       List<string> localDirs = directories.ToList();
 
       foreach (string dir in localDirs)
       {
-        directories.AddRange(ListDirsLoop(dir));
+        directories.AddRange(GetDirectoriesTree(dir));
       }
 
       return directories;
