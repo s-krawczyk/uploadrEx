@@ -1,0 +1,9 @@
+F:\Projekty\UploadrEx\src\UploadrEx\bin\Debug\UploadrEx.exe.config
+F:\Projekty\UploadrEx\src\UploadrEx\obj\Debug\UploadrEx.csprojResolveAssemblyReference.cache
+F:\Projekty\UploadrEx\src\UploadrEx\bin\Debug\UploadrEx.exe
+F:\Projekty\UploadrEx\src\UploadrEx\bin\Debug\UploadrEx.pdb
+F:\Projekty\UploadrEx\src\UploadrEx\bin\Debug\FlickrNet.dll
+F:\Projekty\UploadrEx\src\UploadrEx\bin\Debug\Newtonsoft.Json.dll
+F:\Projekty\UploadrEx\src\UploadrEx\bin\Debug\Newtonsoft.Json.xml
+F:\Projekty\UploadrEx\src\UploadrEx\obj\Debug\UploadrEx.exe
+F:\Projekty\UploadrEx\src\UploadrEx\obj\Debug\UploadrEx.pdb
