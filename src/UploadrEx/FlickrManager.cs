@@ -13,6 +13,11 @@ namespace UploadrEx
     public const string ApiKey = "cd954c37ae19b5a4499a6e6d59003d82";
     public const string SharedSecret = "94898dd04ccd7284";
 
+    static FlickrManager()
+    {
+      Cache.CacheDisabled = true;
+    }
+
     public static Flickr GetInstance()
     {
       return new Flickr(ApiKey, SharedSecret);

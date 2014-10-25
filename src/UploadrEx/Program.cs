@@ -20,54 +20,67 @@ namespace UploadrEx
       LoggerFactory.SetLogger(Log4NetLogger.GetLogger);
       Log = LoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-      if (FlickrManager.OAuthToken == null)
+      AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+      var programOptions = new ProgramOptions();
+      if (CommandLine.Parser.Default.ParseArguments(args, programOptions))
       {
-        Flickr f = FlickrManager.GetInstance();
-
-        OAuthRequestToken requestToken = f.OAuthGetRequestToken("oob");
-
-        string url = f.OAuthCalculateAuthorizationUrl(requestToken.Token, AuthLevel.Write);
-
-        Log.Debug("Please enter authorization code:");
-
-        System.Diagnostics.Process.Start(url);
-
-        string readLine = Console.ReadLine();
-
-        f = FlickrManager.GetInstance();
-        try
+        if (FlickrManager.OAuthToken == null)
         {
-          var accessToken = f.OAuthGetAccessToken(requestToken, readLine);
-          FlickrManager.OAuthToken = accessToken;
+          Flickr f = FlickrManager.GetInstance();
+
+          OAuthRequestToken requestToken = f.OAuthGetRequestToken("oob");
+
+          string url = f.OAuthCalculateAuthorizationUrl(requestToken.Token, AuthLevel.Write);
+
+          Log.Debug("Please enter authorization code:");
+
+          System.Diagnostics.Process.Start(url);
+
+          string readLine = Console.ReadLine();
+
+          f = FlickrManager.GetInstance();
+          try
+          {
+            var accessToken = f.OAuthGetAccessToken(requestToken, readLine);
+            FlickrManager.OAuthToken = accessToken;
+          }
+          catch (FlickrApiException ex)
+          {
+            Log.Error("Error occured.", ex);
+            Environment.Exit(-1);
+          }
         }
-        catch (FlickrApiException ex)
-        {
-          Log.Error("Error occured.", ex);
-        }
+
+        Flickr authInstance = FlickrManager.GetAuthInstance();
+        Auth oAuthCheckToken = authInstance.AuthOAuthCheckToken();
+
+        var flickrSchemaService = new FlickrSchemaService(authInstance, programOptions.RefreshFlickrSchema);
+        var flickrSchema = flickrSchemaService.GetSchema().DistinctBy(k => k.Title).ToDictionary(k => k.Title, v => v);
+        var x = new DirectorySchemaService(programOptions.InputPath);
+        IEnumerable<CollectionFlickr> collectionFlickrs = x.GetSchema();
+        Dictionary<string, CollectionFlickr> directorySchema = collectionFlickrs.DistinctBy(k => k.Title).ToDictionary(k => k.Title, v => v);
+
+        string serializeObject = JsonConvert.SerializeObject(directorySchema);
+        File.WriteAllText(ApplicationHelper.GetAppDataFolder() + "\\scannedInputDirectory.txt", serializeObject);
+
+        Dictionary<string, CollectionFlickr> flickSchemaDir = flickrSchema;
+
+        List<CollectionFlickr> notSynchronized = CompareSchemas(flickSchemaDir, directorySchema);
+
+        string notSynchronizedSerialized = JsonConvert.SerializeObject(notSynchronized);
+        File.WriteAllText(ApplicationHelper.GetAppDataFolder() + "\\notSynchronizedPhotos.txt",
+          notSynchronizedSerialized);
+
+        Upload(authInstance, ref notSynchronized, ref flickSchemaDir);
       }
 
-      Flickr authInstance = FlickrManager.GetAuthInstance();
-      Auth oAuthCheckToken = authInstance.AuthOAuthCheckToken();
-
-      var flickrSchemaService = new FlickrSchemaService(authInstance, false); //TODO: pass from args
-      var flickrSchema = flickrSchemaService.GetSchema().ToDictionary(k => k.Title, v => v);
-      var x = new DirectorySchemaService(@"E:\\Biblioteka Windows\\Zdjecia");
-      IEnumerable<CollectionFlickr> collectionFlickrs = x.GetSchema();
-      Dictionary<string, CollectionFlickr> directorySchema = collectionFlickrs.ToDictionary(k => k.Title, v => v);
-
-      string serializeObject = JsonConvert.SerializeObject(directorySchema);
-      File.WriteAllText(ApplicationHelper.GetAppDataFolder() + "\\schemaFromDisk.txt", serializeObject);
-
-      Dictionary<string, CollectionFlickr> flickSchemaDir = flickrSchema;
-
-      List<CollectionFlickr> notSynchronized = CompareSchemas(flickSchemaDir, directorySchema);
-
-      string notSynchronizedSerialized = JsonConvert.SerializeObject(notSynchronized);
-      File.WriteAllText(ApplicationHelper.GetAppDataFolder() + "\\notSynchronizedPhotos.txt", notSynchronizedSerialized);
-
-      Upload(authInstance, ref notSynchronized, ref flickSchemaDir);
-
       Console.ReadKey();
+    }
+
+    private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+      Log.Fatal("Unhandled exception occured:", (Exception)e.ExceptionObject);
     }
 
     private static void Upload(Flickr flickrInstance, ref List<CollectionFlickr> toUpload, ref Dictionary<string, CollectionFlickr> flickrSchema)
@@ -124,7 +137,7 @@ namespace UploadrEx
 
           Parallel.ForEach(notSyncedAlbum.PhotoList, new ParallelOptions
           {
-            MaxDegreeOfParallelism = 16
+            MaxDegreeOfParallelism = 4
           },
             () => new List<PhotoFlickr>(),
             (photoFlickr, state, arg3) =>
@@ -135,6 +148,8 @@ namespace UploadrEx
               {
                 try
                 {
+                  Log.DebugFormat("Uploading photo [{0}]", photoFlickr.Title);
+
                   photoFlickr.Id = flickrInstance.UploadPicture(photoFlickr.FilePath, photoFlickr.Title, string.Empty,
                     string.Format("\"#Collection={0}\" \"#Album={1}\"", collectionToUpload.Title, notSyncedAlbum.Title),
                     false,
@@ -187,11 +202,12 @@ namespace UploadrEx
             {
               notSynchronizedList.Add(new CollectionFlickr()
               {
+                Id = collectionsFromFlickr[collectionFromDisk.Title].Id,
+                Title = collectionFromDisk.Title,
                 AlbumsFlickr = new List<AlbumFlickr>
                   {
                     localAlbum
-                  },
-                Title = collectionFromDisk.Title
+                  }
               });
             }
             else // inaczej zaaktualizuj liste
