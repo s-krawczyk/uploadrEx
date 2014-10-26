@@ -73,6 +73,8 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="SchemaComparer.cs" />
+    <Compile Include="UploadManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
