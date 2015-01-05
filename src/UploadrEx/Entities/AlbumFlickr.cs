@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace UploadrEx.Entities
@@ -10,6 +12,18 @@ namespace UploadrEx.Entities
 
     public string Title { get; set; }
 
-    public List<PhotoFlickr> PhotoList { get; set; }
+    public BindingList<PhotoFlickr> PhotoList { get; set; }
+
+    public AlbumFlickr()
+    {
+      PhotoList = new BindingList<PhotoFlickr>();
+    }
+
+    public AlbumFlickr(Action onCollectionChanged)
+      : this()
+    {
+      PhotoList.AddingNew += (sender, args) => onCollectionChanged();
+      PhotoList.ListChanged += (sender, args) => onCollectionChanged();
+    }
   }
 }

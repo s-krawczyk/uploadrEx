@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using UploadrEx.Entities;
 
@@ -21,52 +22,52 @@ namespace UploadrEx
           continue;
         }
 
-        var flickrAlbums = dictionaryCollectionsFromFlickr[collectionFromDisk.Title].AlbumsFlickr.ToDictionary(k => k.Title, v => v);
+        Dictionary<string, AlbumFlickr> flickrAlbums = dictionaryCollectionsFromFlickr[collectionFromDisk.Title].AlbumsFlickr.ToDictionary(k => k.Title, v => v);
 
         foreach (AlbumFlickr localAlbum in collectionFromDisk.AlbumsFlickr)
         {
-          // sprawdzam czy jest album juz na serwerze
+          // we check if album is already on server
           if (flickrAlbums.ContainsKey(localAlbum.Title) == false)
           {
-            // jezeli kolekcja nie zsynchronizowanych nie posiada jeszcze tej brakujacej kolekcji dodaj nowa
+            // if collection of not synchronized has no then add it
             if (notSynchronizedList.All(a => a.Title != collectionFromDisk.Title))
             {
               notSynchronizedList.Add(new CollectionFlickr()
               {
                 Id = dictionaryCollectionsFromFlickr[collectionFromDisk.Title].Id,
                 Title = collectionFromDisk.Title,
-                AlbumsFlickr = new List<AlbumFlickr>
+                AlbumsFlickr = new BindingList<AlbumFlickr>
                 {
                   localAlbum
                 }
               });
             }
-            else // inaczej zaaktualizuj liste
+            else // otherwise update whole list
             {
               notSynchronizedList.Single(s => s.Title == collectionFromDisk.Title).AlbumsFlickr.Add(localAlbum);
             }
           }
-          else // album istnieje na serwerze sprawdzam czy sa zaladowane wszystkie pliki
+          else // album exists on server so we are checking if all file are already there
           {
-            var flickrAlbumPhotos = flickrAlbums[localAlbum.Title].PhotoList.DistinctBy(d => d.Title).ToDictionary(k => k.Title, v => true);
+            Dictionary<string, bool> flickrAlbumPhotos = flickrAlbums[localAlbum.Title].PhotoList.DistinctBy(d => d.Title).ToDictionary(k => k.Title, v => true);
 
-            foreach (var localAlbumPhoto in localAlbum.PhotoList)
+            foreach (PhotoFlickr localAlbumPhoto in localAlbum.PhotoList)
             {
               if (flickrAlbumPhotos.ContainsKey(localAlbumPhoto.Title) == false)
               {
-                // jezeli kolekcja nie zsynchronizowanych nie posiada jeszcze tej brakujacej kolekcji dodaj nowa
+                // if collection of not synchronized hasn't it then add new one
                 if (notSynchronizedList.All(a => a.Title != collectionFromDisk.Title))
                 {
                   notSynchronizedList.Add(new CollectionFlickr()
                   {
                     Id = dictionaryCollectionsFromFlickr[collectionFromDisk.Title].Id,
                     Title = collectionFromDisk.Title,
-                    AlbumsFlickr = new List<AlbumFlickr>
+                    AlbumsFlickr = new BindingList<AlbumFlickr>
                     {
                       new AlbumFlickr()
                       {
                         Id = flickrAlbums[localAlbum.Title].Id,
-                        PhotoList = new List<PhotoFlickr>
+                        PhotoList = new BindingList<PhotoFlickr>
                         {
                           localAlbumPhoto
                         },
@@ -75,10 +76,10 @@ namespace UploadrEx
                     },
                   });
                 }
-                else // inaczej zaaktualizuj liste o nowe zdjecie
+                else // otherwise update list with new photo
                 {
-                  var coll = notSynchronizedList.Single(s => s.Title == collectionFromDisk.Title);
-                  var album = coll.AlbumsFlickr.SingleOrDefault(a => a.Title == localAlbum.Title);
+                  CollectionFlickr coll = notSynchronizedList.Single(s => s.Title == collectionFromDisk.Title);
+                  AlbumFlickr album = coll.AlbumsFlickr.SingleOrDefault(a => a.Title == localAlbum.Title);
 
                   if (album != null)
                   {
@@ -90,7 +91,7 @@ namespace UploadrEx
                     {
                       Id = flickrAlbums[localAlbum.Title].Id,
                       Title = localAlbum.Title,
-                      PhotoList = new List<PhotoFlickr>
+                      PhotoList = new BindingList<PhotoFlickr>
                       {
                         localAlbumPhoto
                       }

@@ -26,6 +26,7 @@ namespace UploadrEx
     public static Flickr GetAuthInstance()
     {
       Flickr f = new Flickr(ApiKey, SharedSecret);
+
       f.OAuthAccessToken = OAuthToken.Token;
       f.OAuthAccessTokenSecret = OAuthToken.TokenSecret;
       return f;

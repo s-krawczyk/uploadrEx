@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using UploadrEx.Entities;
@@ -48,33 +49,32 @@ namespace UploadrEx
           {
             collections.Add(year, new CollectionFlickr());
             collections[year].Title = year;
-            collections[year].AlbumsFlickr = new List<AlbumFlickr>();
+            collections[year].AlbumsFlickr = new BindingList<AlbumFlickr>();
           }
 
           AlbumFlickr albumFlickr = new AlbumFlickr
           {
-            Title = name,
-            PhotoList = new List<PhotoFlickr>()
+            Title = name
           };
           collections[year].AlbumsFlickr.Add(albumFlickr);
 
           FileInfo[] fileInfos = directoryInfo.GetFiles("*.jpg");
           if (fileInfos.Length > 0)
           {
-            albumFlickr.PhotoList.AddRange(fileInfos.Select(s => new PhotoFlickr
+            fileInfos.Select(s => new PhotoFlickr
             {
               Title = s.Name,
               FilePath = s.FullName
-            }));
+            }).ToList().ForEach(albumFlickr.PhotoList.Add);
           };
           fileInfos = directoryInfo.GetFiles("*.jpeg");
           if (fileInfos.Length > 0)
           {
-            albumFlickr.PhotoList.AddRange(fileInfos.Select(s => new PhotoFlickr
+            fileInfos.Select(s => new PhotoFlickr
             {
               Title = s.Name,
               FilePath = s.FullName
-            }));
+            }).ToList().ForEach(albumFlickr.PhotoList.Add);
           };
         }
       }

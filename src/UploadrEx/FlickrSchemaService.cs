@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using UploadrEx.Entities;
@@ -54,10 +54,10 @@ namespace UploadrEx
         {
           Id = collectionFlickr.CollectionId,
           Title = collectionFlickr.Title,
-          AlbumsFlickr = new List<AlbumFlickr>()
+          AlbumsFlickr = new BindingList<AlbumFlickr>()
         };
 
-        foreach (var collectionSet in collectionFlickr.Sets)
+        foreach (CollectionSet collectionSet in collectionFlickr.Sets)
         {
           AlbumFlickr albumFlickr = new AlbumFlickr
           {
@@ -101,7 +101,7 @@ namespace UploadrEx
             page++;
           }
 
-          albumFlickr.PhotoList = new List<PhotoFlickr>();
+          albumFlickr.PhotoList = new BindingList<PhotoFlickr>();
 
           foreach (Photo photoFromSet in photosetPhotoCollection)
           {

@@ -54,12 +54,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DirectorySchemaService.cs" />
+    <Compile Include="DuplicatesService.cs" />
     <Compile Include="Entities\AlbumFlickr.cs" />
     <Compile Include="Entities\CollectionFlickr.cs" />
     <Compile Include="ExtensionsForIList.cs" />
     <Compile Include="FlickrManager.cs" />
     <Compile Include="Entities\PhotoFlickr.cs" />
     <Compile Include="FlickrSchemaService.cs" />
+    <Compile Include="FlickrSmallBatchesUploader.cs" />
     <Compile Include="Infrastructure\ApplicationHelper.cs" />
     <Compile Include="Infrastructure\ILogger.cs" />
     <Compile Include="ISchemaService.cs" />

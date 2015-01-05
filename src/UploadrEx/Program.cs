@@ -15,7 +15,6 @@ namespace UploadrEx
 {
   internal class Program
   {
-    private const string FlickrSchemaFileName = "flickrSchema.txt";
     private const string NotSynchronizedElementdFileName = "notSynchronizedPhotos.txt";
     private static ILogger Log;
 
@@ -26,7 +25,7 @@ namespace UploadrEx
 
       AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-      var programOptions = new ProgramOptions();
+      ProgramOptions programOptions = new ProgramOptions();
       if (CommandLine.Parser.Default.ParseArguments(args, programOptions))
       {
         if (FlickrManager.OAuthToken == null)
@@ -35,7 +34,7 @@ namespace UploadrEx
 
           OAuthRequestToken requestToken = f.OAuthGetRequestToken("oob");
 
-          string url = f.OAuthCalculateAuthorizationUrl(requestToken.Token, AuthLevel.Write);
+          string url = f.OAuthCalculateAuthorizationUrl(requestToken.Token, AuthLevel.Delete);
 
           Log.Debug("Please enter authorization code:");
 
@@ -46,7 +45,7 @@ namespace UploadrEx
           f = FlickrManager.GetInstance();
           try
           {
-            var accessToken = f.OAuthGetAccessToken(requestToken, readLine);
+            OAuthAccessToken accessToken = f.OAuthGetAccessToken(requestToken, readLine);
             FlickrManager.OAuthToken = accessToken;
           }
           catch (FlickrApiException ex)
@@ -57,15 +56,8 @@ namespace UploadrEx
         }
 
         Flickr authInstance = FlickrManager.GetAuthInstance();
-
-        var flickrSchemaService = new FlickrSchemaService(authInstance, programOptions.RefreshFlickrSchema);
-        var directorySchemaService = new DirectorySchemaService(programOptions.InputPath);
-
-        IEnumerable<CollectionFlickr> flickrSchema = flickrSchemaService.GetSchema();
-        SaveToFile(FlickrSchemaFileName, flickrSchema);
+        DirectorySchemaService directorySchemaService = new DirectorySchemaService(programOptions.InputPath);
         IEnumerable<CollectionFlickr> directorySchema = directorySchemaService.GetSchema();
-
-        List<CollectionFlickr> toSynchronize = new SchemaComparer().CompareSchemas(flickrSchema, directorySchema);
 
         SaveToFile(NotSynchronizedElementdFileName, directorySchema);
 
@@ -74,23 +66,20 @@ namespace UploadrEx
 
         backgroundWorker.DoWork += (sender, eventArgs) =>
         {
-          var worker = (BackgroundWorker)sender;
-          var tuple = eventArgs.Argument as Tuple<Flickr, IEnumerable<CollectionFlickr>, IEnumerable<CollectionFlickr>>;
-
-          new UploadManager().Upload(() => worker.CancellationPending, tuple.Item1, tuple.Item2, tuple.Item3);
+          new FlickrSmallBatchesUploader(authInstance).UploadSchema((IEnumerable<CollectionFlickr>)eventArgs.Argument);
         };
 
         backgroundWorker.RunWorkerCompleted += (sender, eventArgs) =>
         {
-          SaveToFile(FlickrSchemaFileName, flickrSchema);
+          if (eventArgs.Error != null)
+          {
+            Log.Error("Error occured on processing. Probably synchronization not ended successfully.", eventArgs.Error);
+          }
+
+          Log.Info("Saving schema on end.");
         };
 
-        var bwData = new Tuple<Flickr, IEnumerable<CollectionFlickr>, IEnumerable<CollectionFlickr>>(
-          authInstance,
-          toSynchronize,
-          flickrSchema);
-
-        backgroundWorker.RunWorkerAsync(bwData);
+        backgroundWorker.RunWorkerAsync(directorySchema);
 
         Console.ReadKey();
 
